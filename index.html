@@ -1,54 +1,825 @@
-<!doctype html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>WaterSource FIS | Mamdani Monitoring Priority</title>
-<style>
-:root{--ink:#15263b;--muted:#5d7086;--border:#dce5ec;--teal:#0b766c;--bg:#f3f7fa;--navy:#12354c;--red:#bb4e3c;--soft:#e7f5f3;--radius:14px}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.48 system-ui,-apple-system,'Segoe UI',Arial,sans-serif}
-header{background:linear-gradient(110deg,#12354c,#176359);color:white;padding:28px max(5vw,22px)}header .eyebrow{text-transform:uppercase;letter-spacing:2px;font-weight:700;font-size:11px;opacity:.8}h1{font-size:30px;line-height:1.2;margin:9px 0 6px}header p{max-width:850px;margin:0;color:#d8ecec;font-size:14px}
-main{width:min(1300px,94vw);margin:24px auto 44px}.grid{display:grid;grid-template-columns:360px 1fr;gap:20px}.card{background:white;border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 3px 15px rgba(19,49,70,.04);padding:23px;margin-bottom:20px}h2{font-size:19px;margin:0 0 15px}h3{font-size:15px;margin:0 0 10px}.muted{font-size:12px;color:var(--muted)}label{display:block;font-size:13px;font-weight:700;margin:17px 0 6px}input{display:block;width:100%;border:1px solid #b8c9d5;border-radius:8px;padding:11px;font-size:17px;color:var(--ink)}input:focus{outline:2px solid #54b7a7;outline-offset:1px}button{border:0;border-radius:9px;background:var(--teal);color:white;font-weight:700;padding:12px 15px;font-size:13px;cursor:pointer}button.secondary{color:var(--navy);background:#e9f2f6}button:hover{filter:brightness(.93)}button:focus-visible{outline:2px solid #264dff}button:active{transform:translateY(1px)}.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.presets button{font-size:11px;padding:8px 10px}.action{width:100%;margin-top:20px}.error{color:#b42318;font-weight:700;margin-top:12px;min-height:18px}.note{padding:12px 15px;background:#fff8ed;border-left:3px solid #e8a33e;border-radius:4px;color:#664b27;font-size:12px;margin-top:19px}
-.scoreblock{display:flex;align-items:center;gap:24px;margin:14px 0 12px;flex-wrap:wrap}.score{font-variant-numeric:tabular-nums;font-size:54px;font-weight:750;line-height:1;letter-spacing:-2px}.score small{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}.chip{border:1px solid #d9bcae;background:#fff1eb;color:#923d28;padding:8px 13px;border-radius:99px;font-size:12px;font-weight:800}.interpretation{font-size:13px;color:var(--muted);margin:8px 0 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.mini{border:1px solid var(--border);border-radius:10px;padding:13px}.mini .v{font-weight:750;font-size:21px}.mini .t{color:var(--muted);font-size:11px}.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.chartcard{border:1px solid var(--border);border-radius:10px;padding:13px;overflow:hidden}canvas{display:block;width:100%;height:208px}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#eef4f7;text-align:left;padding:11px;border-bottom:1px solid var(--border)}td{padding:10px 11px;border-bottom:1px solid #edf1f4;white-space:nowrap}tr.active{background:#eaf7f5;font-weight:700}.scroll{max-height:375px;overflow:auto;border-radius:8px;border:1px solid var(--border)}.detail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.detail article{border:1px solid var(--border);padding:12px;border-radius:10px}.term{display:flex;justify-content:space-between;font-size:12px;margin:7px 0}.track{background:#edf1f4;height:5px;border-radius:100px;overflow:hidden}.bar{background:#15988b;height:100%;border-radius:100px}footer{font-size:12px;color:#5d7086;text-align:center;padding:4px 10px 20px}
-@media(max-width:1000px){.grid{grid-template-columns:1fr}.detail{grid-template-columns:1fr 1fr 1fr}}@media(max-width:680px){.charts,.detail,.stats{grid-template-columns:1fr}h1{font-size:24px}.score{font-size:44px}.card{padding:15px}}
-</style></head><body>
-<header><div class="eyebrow">CSci 152 · Laboratory Activity #3</div><h1>WaterSource FIS</h1><p>An explainable Mamdani fuzzy inference system for preliminary water-source monitoring and confirmatory sampling priority. Educational prototype; not a potability assessment.</p></header>
-<main><div class="grid"><section class="card"><h2>1 · Enter crisp inputs</h2><p class="muted">Values are entered manually. Example presets demonstrate expected cases.</p>
-<label for="ph">pH (0–14)</label><input id="ph" type="number" min="0" max="14" step="0.01" value="6.6"/>
-<label for="turbidity">Turbidity (NTU, 0–50)</label><input id="turbidity" type="number" min="0" max="50" step="0.01" value="4.5"/>
-<label for="tds">Total Dissolved Solids (mg/L, 0–2000)</label><input id="tds" type="number" min="0" max="2000" step="1" value="750"/>
-<button class="action" onclick="run()">Evaluate water source</button><div class="presets"><button class="secondary" onclick="preset(7.2,0.7,280)">Low priority example</button><button class="secondary" onclick="preset(6.6,4.5,750)">Mixed example</button><button class="secondary" onclick="preset(5.7,16,1600)">High priority example</button></div>
-<div id="error" class="error" aria-live="assertive"></div><div class="note"><b>Important:</b> This score is a model-derived monitoring priority, not a percentage chance of contamination or a certification that water is safe. Membership ranges and rules are preliminary and have not been expert-validated.</div></section>
-<div><section class="card"><h2>2 · Defuzzified result</h2><div class="scoreblock"><div class="score"><span id="score">—</span> <small>/ 100</small></div><span class="chip" id="classification">—</span></div><p class="interpretation" id="status">Run an evaluation to view the monitoring priority.</p><div class="stats"><div class="mini"><div class="v" id="count">—</div><div class="t">Activated rules</div></div><div class="mini"><div class="v">27</div><div class="t">Total rule combinations</div></div><div class="mini"><div class="v">0.1</div><div class="t">Output integration step</div></div></section>
-<section class="card"><h2>3 · Fuzzification (membership degrees)</h2><div id="degrees" class="detail"></div></section></div></div>
-<section class="card"><h2>4 · Membership functions and aggregation</h2><div class="charts"><div class="chartcard"><h3>pH · Acidic / Acceptable / Alkaline</h3><canvas id="phchart" height="208"></canvas></div><div class="chartcard"><h3>Turbidity · Clear / Borderline / Turbid</h3><canvas id="turbchart" height="208"></canvas></div><div class="chartcard"><h3>TDS · Typical / Elevated / Very High</h3><canvas id="tdschart" height="208"></canvas></div><div class="chartcard"><h3>Aggregated output · Monitoring Priority</h3><canvas id="prioritychart" height="208"></canvas></div></div><p class="muted">Colored curves = term membership functions; dotted vertical markers = crisp inputs. The shaded black output is the max of all clipped fired-rule consequents.</p></section>
-<section class="card"><h2>5 · Fired IF–THEN rules</h2><p class="muted">Rule strength = min(μpH, μTurbidity, μTDS). Only rules with strength greater than zero are shown.</p><div class="scroll"><table id="fired"><thead><tr><th>ID</th><th>Rule (antecedents → consequent)</th><th>Strength</th></tr></thead><tbody></tbody></table></div></section>
-<section class="card"><h2>6 · Complete rule base</h2><p class="muted">All 3 × 3 × 3 = 27 input-term combinations, including those not currently fired. Rules are initial educational design choices, not elicited expert judgments.</p><div class="scroll"><table id="allrules"><thead><tr><th>#</th><th>pH</th><th>Turbidity</th><th>TDS</th><th>Then priority</th></tr></thead><tbody></tbody></table></div></section>
-</main><footer>WaterSource FIS · Mamdani min–max inference and centroid defuzzification · Educational software prototype</footer>
-<script src="engine.js"></script><script>
-'use strict';let current;
-function preset(p,t,d){document.getElementById('ph').value=p;document.getElementById('turbidity').value=t;document.getElementById('tds').value=d;run();}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function run(){const inputs={ph:document.getElementById('ph').value,turbidity:document.getElementById('turbidity').value,tds:document.getElementById('tds').value};try{
-  current=WaterFIS.calculate(inputs);document.getElementById('error').textContent='';render(current);
-}catch(e){document.getElementById('error').textContent=e.message;}}
-function render(r){document.getElementById('score').textContent=r.score.toFixed(2);document.getElementById('classification').textContent=r.label.toUpperCase()+' PRIORITY';document.getElementById('count').textContent=r.fired.length;
- document.getElementById('status').textContent='Model-derived priority for further observation or confirmatory testing. Low priority does not imply drinking-water safety.';
- document.getElementById('degrees').innerHTML=['ph','turbidity','tds'].map(k=>`<article><h3>${esc(WaterFIS.variables[k].label)}</h3>`+WaterFIS.variables[k].terms.map(t=>{
- const v=r.fuzzy[k][t.name];return `<div class="term"><span>${esc(t.name)}</span><b>${v.toFixed(4)}</b></div><div class="track"><div class="bar" style="width:${(v*100).toFixed(2)}%"></div></div>`;}).join('')+'</article>').join('');
- document.querySelector('#fired tbody').innerHTML=r.fired.map(a=>`<tr><td>${a.id}</td><td>IF pH is ${esc(a.ph)} AND Turbidity is ${esc(a.turbidity)} AND TDS is ${esc(a.tds)} THEN ${esc(a.output)}</td><td>${a.strength.toFixed(4)}</td></tr>`).join('');
- document.querySelector('#allrules tbody').innerHTML=WaterFIS.rules.map(a=>`<tr class="${r.fired.some(f=>f.id===a.id)?'active':''}"><td>${a.id}</td><td>${esc(a.ph)}</td><td>${esc(a.turbidity)}</td><td>${esc(a.tds)}</td><td>${esc(a.output)}</td></tr>`).join('');
- drawAll();}
-const colors=['#168a87','#dd9a28','#a84956'];
-function drawChart(id, key, marker, agg){const canvas=document.getElementById(id);const ctx=canvas.getContext('2d');if(!ctx)return;
- const ratio=window.devicePixelRatio||1,w=Math.max(260,canvas.getBoundingClientRect().width),h=208;canvas.width=w*ratio;canvas.height=h*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,w,h);
- const v=WaterFIS.variables[key],L=42,T=12,R=13,B=36,pw=w-L-R,ph=h-T-B;const cx=x=>L+(x-v.min)/(v.max-v.min)*pw,cy=mu=>T+(1-mu)*ph;
- ctx.font='11px system-ui';ctx.strokeStyle='#e1e9ef';ctx.lineWidth=1;
- for(let m=0;m<=1.0001;m+=.25){ctx.beginPath();ctx.moveTo(L,cy(m));ctx.lineTo(w-R,cy(m));ctx.stroke();}
- ctx.fillStyle='#688096';ctx.textAlign='right';[0,.5,1].forEach(m=>ctx.fillText(m.toFixed(1),L-8,cy(m)+4));
- ctx.textAlign='center';for(let i=0;i<=4;i++){const x=v.min+(v.max-v.min)*i/4;ctx.fillText(Number(x.toFixed(1)),cx(x),h-16);}
- if(agg){ctx.beginPath();ctx.moveTo(cx(0),cy(0));agg.forEach(pt=>ctx.lineTo(cx(pt.y),cy(pt.mu)));ctx.lineTo(cx(100),cy(0));ctx.closePath();ctx.fillStyle='rgba(31,60,78,.20)';ctx.fill();ctx.beginPath();agg.forEach((p,i)=>{if(i===0)ctx.moveTo(cx(p.y),cy(p.mu));else ctx.lineTo(cx(p.y),cy(p.mu));});ctx.strokeStyle='#203e53';ctx.lineWidth=2.5;ctx.stroke();}
- v.terms.forEach((term,ti)=>{ctx.beginPath();for(let i=0;i<=400;i++){const x=v.min+(v.max-v.min)*i/400,y=WaterFIS.membership(term,x);if(i===0)ctx.moveTo(cx(x),cy(y));else ctx.lineTo(cx(x),cy(y));}ctx.strokeStyle=colors[ti];ctx.lineWidth=2;ctx.stroke();});
- if(marker!==null){ctx.save();ctx.beginPath();ctx.moveTo(cx(marker),T);ctx.lineTo(cx(marker),h-B);ctx.strokeStyle='#344c61';ctx.lineWidth=1.25;ctx.setLineDash([4,4]);ctx.stroke();ctx.restore();}
- // Terms legend above axis
- v.terms.forEach((t,i)=>{const lx=L+i*(pw/3);ctx.fillStyle=colors[i];ctx.fillRect(lx,h-8,7,3);ctx.fillStyle='#536b7e';ctx.textAlign='left';ctx.font='10px system-ui';ctx.fillText(t.name,lx+10,h-4);});}
-function drawAll(){if(!current)return;drawChart('phchart','ph',current.inputs.ph,null);drawChart('turbchart','turbidity',current.inputs.turbidity,null);drawChart('tdschart','tds',current.inputs.tds,null);drawChart('prioritychart','priority',current.score,current.curve);}
-window.addEventListener('resize',drawAll);run();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   WaterSource FIS | Mamdani Monitoring Priority
+  </title>
+  <style>
+   
+
+    /* Theme and basic elements */
+    :root {
+        --ink: #15263b;
+        --muted: #5d7086;
+        --border: #dce5ec;
+        --teal: #0b766c;
+        --bg: #f3f7fa;
+        --navy: #12354c;
+        --red: #bb4e3c;
+        --soft: #e7f5f3;
+        --radius: 14px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.48 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    }
+
+
+    /* Page layout and typography */
+    header {
+        background: linear-gradient(110deg,#12354c,#176359);
+        color: white;
+        padding: 28px max(5vw,22px);
+    }
+
+    header .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 700;
+        font-size: 11px;
+        opacity: .8;
+    }
+
+    h1 {
+        font-size: 30px;
+        line-height: 1.2;
+        margin: 9px 0 6px;
+    }
+
+    header p {
+        max-width: 850px;
+        margin: 0;
+        color: #d8ecec;
+        font-size: 14px;
+    }
+
+    main {
+        width: min(1300px,94vw);
+        margin: 24px auto 44px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: 0 3px 15px rgba(19,49,70,.04);
+        padding: 23px;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 19px;
+        margin: 0 0 15px;
+    }
+
+    h3 {
+        font-size: 15px;
+        margin: 0 0 10px;
+    }
+
+    .muted {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+
+    /* Forms and actions */
+    label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        margin: 17px 0 6px;
+    }
+
+    input {
+        display: block;
+        width: 100%;
+        border: 1px solid #b8c9d5;
+        border-radius: 8px;
+        padding: 11px;
+        font-size: 17px;
+        color: var(--ink);
+    }
+
+    input:focus {
+        outline: 2px solid #54b7a7;
+        outline-offset: 1px;
+    }
+
+    button {
+        border: 0;
+        border-radius: 9px;
+        background: var(--teal);
+        color: white;
+        font-weight: 700;
+        padding: 12px 15px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    button.secondary {
+        color: var(--navy);
+        background: #e9f2f6;
+    }
+
+    button:hover {
+        filter: brightness(.93);
+    }
+
+    button:focus-visible {
+        outline: 2px solid #264dff;
+    }
+
+    button:active {
+        transform: translateY(1px);
+    }
+
+    .presets {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .presets button {
+        font-size: 11px;
+        padding: 8px 10px;
+    }
+
+    .action {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .error {
+        color: #b42318;
+        font-weight: 700;
+        margin-top: 12px;
+        min-height: 18px;
+    }
+
+    .note {
+        padding: 12px 15px;
+        background: #fff8ed;
+        border-left: 3px solid #e8a33e;
+        border-radius: 4px;
+        color: #664b27;
+        font-size: 12px;
+        margin-top: 19px;
+    }
+
+
+    /* Result panels and data displays */
+    .scoreblock {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin: 14px 0 12px;
+        flex-wrap: wrap;
+    }
+
+    .score {
+        font-variant-numeric: tabular-nums;
+        font-size: 54px;
+        font-weight: 750;
+        line-height: 1;
+        letter-spacing: -2px;
+    }
+
+    .score small {
+        font-size: 15px;
+        color: var(--muted);
+        font-weight: 500;
+        letter-spacing: 0;
+    }
+
+    .chip {
+        border: 1px solid #d9bcae;
+        background: #fff1eb;
+        color: #923d28;
+        padding: 8px 13px;
+        border-radius: 99px;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .interpretation {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 8px 0 0;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 12px;
+    }
+
+    .mini {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 13px;
+    }
+
+    .mini .v {
+        font-weight: 750;
+        font-size: 21px;
+    }
+
+    .mini .t {
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+
+    /* Visualizations and tables */
+    .charts {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 16px;
+    }
+
+    .chartcard {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 13px;
+        overflow: hidden;
+    }
+
+    canvas {
+        display: block;
+        width: 100%;
+        height: 208px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    th {
+        background: #eef4f7;
+        text-align: left;
+        padding: 11px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    td {
+        padding: 10px 11px;
+        border-bottom: 1px solid #edf1f4;
+        white-space: nowrap;
+    }
+
+    tr.active {
+        background: #eaf7f5;
+        font-weight: 700;
+    }
+
+    .scroll {
+        max-height: 375px;
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+
+    .detail {
+        display: grid;
+        grid-template-columns: repeat(3,minmax(0,1fr));
+        gap: 13px;
+    }
+
+    .detail article {
+        border: 1px solid var(--border);
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .term {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin: 7px 0;
+    }
+
+    .track {
+        background: #edf1f4;
+        height: 5px;
+        border-radius: 100px;
+        overflow: hidden;
+    }
+
+    .bar {
+        background: #15988b;
+        height: 100%;
+        border-radius: 100px;
+    }
+
+    footer {
+        font-size: 12px;
+        color: #5d7086;
+        text-align: center;
+        padding: 4px 10px 20px;
+    }
+
+    @media(max-width:1000px) {
+        .grid {
+            grid-template-columns: 1fr;
+        }
+        .detail {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+    }
+
+    @media(max-width:680px) {
+        .charts,.detail,.stats {
+            grid-template-columns: 1fr;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        .score {
+            font-size: 44px;
+        }
+        .card {
+            padding: 15px;
+        }
+    }
+
+  
+  </style>
+ </head>
+ <body>
+  <header>
+   <div class="eyebrow">
+    CSci 141 · Laboratory Activity #3
+   </div>
+   <h1>
+    WaterSource FIS
+   </h1>
+   <p>
+    An explainable Mamdani fuzzy inference system for preliminary water-source monitoring and confirmatory sampling priority. Educational prototype; not a potability assessment.
+   </p>
+  </header>
+  <main>
+   <div class="grid">
+    <section class="card">
+     <h2>
+      1 · Enter crisp inputs
+     </h2>
+     <p class="muted">
+      Values are entered manually. Example presets demonstrate expected cases.
+     </p>
+     <label for="ph">
+      pH (0–14)
+     </label>
+     <input id="ph" max="14" min="0" step="0.01" type="number" value="6.6"/>
+     <label for="turbidity">
+      Turbidity (NTU, 0–50)
+     </label>
+     <input id="turbidity" max="50" min="0" step="0.01" type="number" value="4.5"/>
+     <label for="tds">
+      Total Dissolved Solids (mg/L, 0–2000)
+     </label>
+     <input id="tds" max="2000" min="0" step="1" type="number" value="750"/>
+     <button class="action" onclick="run()">
+      Evaluate water source
+     </button>
+     <div class="presets">
+      <button class="secondary" onclick="preset(7.2,0.7,280)">
+       Low priority example
+      </button>
+      <button class="secondary" onclick="preset(6.6,4.5,750)">
+       Mixed example
+      </button>
+      <button class="secondary" onclick="preset(5.7,16,1600)">
+       High priority example
+      </button>
+     </div>
+     <div aria-live="assertive" class="error" id="error">
+     </div>
+     <div class="note">
+      <b>
+       Important:
+      </b>
+      This score is a model-derived monitoring priority, not a percentage chance of contamination or a certification that water is safe. Membership ranges and rules are preliminary and have not been expert-validated.
+     </div>
+    </section>
+    <div>
+     <section class="card">
+      <h2>
+       2 · Defuzzified result
+      </h2>
+      <div class="scoreblock">
+       <div class="score">
+        <span id="score">
+         —
+        </span>
+        <small>
+         / 100
+        </small>
+       </div>
+       <span class="chip" id="classification">
+        —
+       </span>
+      </div>
+      <p class="interpretation" id="status">
+       Run an evaluation to view the monitoring priority.
+      </p>
+      <div class="stats">
+       <div class="mini">
+        <div class="v" id="count">
+         —
+        </div>
+        <div class="t">
+         Activated rules
+        </div>
+       </div>
+       <div class="mini">
+        <div class="v">
+         27
+        </div>
+        <div class="t">
+         Total rule combinations
+        </div>
+       </div>
+       <div class="mini">
+        <div class="v">
+         0.1
+        </div>
+        <div class="t">
+         Output integration step
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="card">
+      <h2>
+       3 · Fuzzification (membership degrees)
+      </h2>
+      <div class="detail" id="degrees">
+      </div>
+     </section>
+    </div>
+   </div>
+   <section class="card">
+    <h2>
+     4 · Membership functions and aggregation
+    </h2>
+    <div class="charts">
+     <div class="chartcard">
+      <h3>
+       pH · Acidic / Acceptable / Alkaline
+      </h3>
+      <canvas height="208" id="phchart">
+      </canvas>
+     </div>
+     <div class="chartcard">
+      <h3>
+       Turbidity · Clear / Borderline / Turbid
+      </h3>
+      <canvas height="208" id="turbchart">
+      </canvas>
+     </div>
+     <div class="chartcard">
+      <h3>
+       TDS · Typical / Elevated / Very High
+      </h3>
+      <canvas height="208" id="tdschart">
+      </canvas>
+     </div>
+     <div class="chartcard">
+      <h3>
+       Aggregated output · Monitoring Priority
+      </h3>
+      <canvas height="208" id="prioritychart">
+      </canvas>
+     </div>
+    </div>
+    <p class="muted">
+     Colored curves = term membership functions; dotted vertical markers = crisp inputs. The shaded black output is the max of all clipped fired-rule consequents.
+    </p>
+   </section>
+   <section class="card">
+    <h2>
+     5 · Fired IF–THEN rules
+    </h2>
+    <p class="muted">
+     Rule strength = min(μpH, μTurbidity, μTDS). Only rules with strength greater than zero are shown.
+    </p>
+    <div class="scroll">
+     <table id="fired">
+      <thead>
+       <tr>
+        <th>
+         ID
+        </th>
+        <th>
+         Rule (antecedents → consequent)
+        </th>
+        <th>
+         Strength
+        </th>
+       </tr>
+      </thead>
+      <tbody>
+      </tbody>
+     </table>
+    </div>
+   </section>
+   <section class="card">
+    <h2>
+     6 · Complete rule base
+    </h2>
+    <p class="muted">
+     All 3 × 3 × 3 = 27 input-term combinations, including those not currently fired. Rules are initial educational design choices, not elicited expert judgments.
+    </p>
+    <div class="scroll">
+     <table id="allrules">
+      <thead>
+       <tr>
+        <th>
+         #
+        </th>
+        <th>
+         pH
+        </th>
+        <th>
+         Turbidity
+        </th>
+        <th>
+         TDS
+        </th>
+        <th>
+         Then priority
+        </th>
+       </tr>
+      </thead>
+      <tbody>
+      </tbody>
+     </table>
+    </div>
+   </section>
+  </main>
+  <footer>
+   WaterSource FIS · Mamdani min–max inference and centroid defuzzification · Educational software prototype
+  </footer>
+  <script src="engine.js">
+  </script>
+  <script>
+    'use strict';
+
+    // The inference calculations and complete rule base are defined in engine.js.
+    // This inline script is responsible only for handling inputs and displaying results.
+    let currentResult = null;
+
+    const chartColors = ['#168a87', '#dd9a28', '#a84956'];
+    const inputKeys = ['ph', 'turbidity', 'tds'];
+
+    // Load one of the provided example scenarios and immediately evaluate it.
+    function preset(ph, turbidity, tds) {
+        document.getElementById('ph').value = ph;
+        document.getElementById('turbidity').value = turbidity;
+        document.getElementById('tds').value = tds;
+        run();
+    }
+
+    // Escape text that will be inserted into the page through innerHTML.
+    function esc(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    // Read and evaluate the three crisp inputs. The engine performs validation.
+    function run() {
+        const inputs = {
+            ph: document.getElementById('ph').value,
+            turbidity: document.getElementById('turbidity').value,
+            tds: document.getElementById('tds').value
+        };
+
+        try {
+            currentResult = WaterFIS.calculate(inputs);
+            document.getElementById('error').textContent = '';
+            render(currentResult);
+        } catch (error) {
+            document.getElementById('error').textContent = error.message;
+        }
+    }
+
+    // Present the score and the number of rules that fired.
+    function renderSummary(result) {
+        document.getElementById('score').textContent = result.score.toFixed(2);
+        document.getElementById('classification').textContent =
+            result.label.toUpperCase() + ' PRIORITY';
+        document.getElementById('count').textContent = result.fired.length;
+        document.getElementById('status').textContent =
+            'Model-derived priority for further observation or confirmatory testing. ' +
+            'Low priority does not imply drinking-water safety.';
+    }
+
+    // Show each input's three linguistic terms and their membership degrees.
+    function renderMembershipDegrees(result) {
+        document.getElementById('degrees').innerHTML = inputKeys.map(key => {
+            const variable = WaterFIS.variables[key];
+            const termRows = variable.terms.map(term => {
+                const degree = result.fuzzy[key][term.name];
+                return `
+                    <div class="term">
+                        <span>${esc(term.name)}</span>
+                        <b>${degree.toFixed(4)}</b>
+                    </div>
+                    <div class="track">
+                        <div class="bar" style="width:${(degree * 100).toFixed(2)}%"></div>
+                    </div>
+                `;
+            }).join('');
+
+            return `<article><h3>${esc(variable.label)}</h3>${termRows}</article>`;
+        }).join('');
+    }
+
+    // List only rules with a nonzero firing strength.
+    function renderFiredRules(result) {
+        document.querySelector('#fired tbody').innerHTML = result.fired.map(rule => `
+            <tr>
+                <td>${rule.id}</td>
+                <td>IF pH is ${esc(rule.ph)} AND Turbidity is ${esc(rule.turbidity)}
+                    AND TDS is ${esc(rule.tds)} THEN ${esc(rule.output)}</td>
+                <td>${rule.strength.toFixed(4)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Always display all 27 combinations; highlight currently activated rules.
+    function renderRuleBase(result) {
+        const firedIds = new Set(result.fired.map(rule => rule.id));
+
+        document.querySelector('#allrules tbody').innerHTML = WaterFIS.rules.map(rule => `
+            <tr class="${firedIds.has(rule.id) ? 'active' : ''}">
+                <td>${rule.id}</td>
+                <td>${esc(rule.ph)}</td>
+                <td>${esc(rule.turbidity)}</td>
+                <td>${esc(rule.tds)}</td>
+                <td>${esc(rule.output)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Coordinate the various output sections after a successful evaluation.
+    function render(result) {
+        renderSummary(result);
+        renderMembershipDegrees(result);
+        renderFiredRules(result);
+        renderRuleBase(result);
+        drawAll();
+    }
+
+    // Draw one set of membership functions on a canvas.
+    // If an aggregated output curve is provided, shade that curve too.
+    function drawChart(canvasId, variableKey, crispMarker, aggregatedCurve) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Scale for high-density displays without changing the visual dimensions.
+        const pixelRatio = window.devicePixelRatio || 1;
+        const width = Math.max(260, canvas.getBoundingClientRect().width);
+        const height = 208;
+        canvas.width = width * pixelRatio;
+        canvas.height = height * pixelRatio;
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const variable = WaterFIS.variables[variableKey];
+        const left = 42;
+        const top = 12;
+        const right = 13;
+        const bottom = 36;
+        const plotWidth = width - left - right;
+        const plotHeight = height - top - bottom;
+
+        // Convert physical values and membership degrees into canvas coordinates.
+        const xPosition = x => left + (x - variable.min) /
+            (variable.max - variable.min) * plotWidth;
+        const yPosition = degree => top + (1 - degree) * plotHeight;
+
+        // Background grid and labels for the degree-of-membership axis.
+        ctx.font = '11px system-ui';
+        ctx.strokeStyle = '#e1e9ef';
+        ctx.lineWidth = 1;
+        for (let degree = 0; degree <= 1.0001; degree += 0.25) {
+            ctx.beginPath();
+            ctx.moveTo(left, yPosition(degree));
+            ctx.lineTo(width - right, yPosition(degree));
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#688096';
+        ctx.textAlign = 'right';
+        [0, 0.5, 1].forEach(degree => {
+            ctx.fillText(degree.toFixed(1), left - 8, yPosition(degree) + 4);
+        });
+
+        // Numeric values along the input/output universe.
+        ctx.textAlign = 'center';
+        for (let index = 0; index <= 4; index++) {
+            const value = variable.min + (variable.max - variable.min) * index / 4;
+            ctx.fillText(Number(value.toFixed(1)), xPosition(value), height - 16);
+        }
+
+        // Aggregation is shown as a shaded region behind the output term curves.
+        if (aggregatedCurve) {
+            ctx.beginPath();
+            ctx.moveTo(xPosition(0), yPosition(0));
+            aggregatedCurve.forEach(point => {
+                ctx.lineTo(xPosition(point.y), yPosition(point.mu));
+            });
+            ctx.lineTo(xPosition(100), yPosition(0));
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(31,60,78,.20)';
+            ctx.fill();
+
+            ctx.beginPath();
+            aggregatedCurve.forEach((point, index) => {
+                const x = xPosition(point.y);
+                const y = yPosition(point.mu);
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.strokeStyle = '#203e53';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+        }
+
+        // Draw the three original fuzzy membership functions.
+        variable.terms.forEach((term, termIndex) => {
+            ctx.beginPath();
+            for (let index = 0; index <= 400; index++) {
+                const x = variable.min + (variable.max - variable.min) * index / 400;
+                const y = WaterFIS.membership(term, x);
+                if (index === 0) ctx.moveTo(xPosition(x), yPosition(y));
+                else ctx.lineTo(xPosition(x), yPosition(y));
+            }
+            ctx.strokeStyle = chartColors[termIndex];
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        });
+
+        // Dotted vertical line: entered crisp value or final centroid score.
+        if (crispMarker !== null) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(xPosition(crispMarker), top);
+            ctx.lineTo(xPosition(crispMarker), height - bottom);
+            ctx.strokeStyle = '#344c61';
+            ctx.lineWidth = 1.25;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Label the three linguistic terms under each graph.
+        variable.terms.forEach((term, index) => {
+            const legendX = left + index * (plotWidth / 3);
+            ctx.fillStyle = chartColors[index];
+            ctx.fillRect(legendX, height - 8, 7, 3);
+            ctx.fillStyle = '#536b7e';
+            ctx.textAlign = 'left';
+            ctx.font = '10px system-ui';
+            ctx.fillText(term.name, legendX + 10, height - 4);
+        });
+    }
+
+    // Refresh graphs using the latest successful result, including on resize.
+    function drawAll() {
+        if (!currentResult) return;
+
+        drawChart('phchart', 'ph', currentResult.inputs.ph, null);
+        drawChart('turbchart', 'turbidity', currentResult.inputs.turbidity, null);
+        drawChart('tdschart', 'tds', currentResult.inputs.tds, null);
+        drawChart('prioritychart', 'priority', currentResult.score, currentResult.curve);
+    }
+
+    // Display the initial input example immediately when the page is opened.
+    window.addEventListener('resize', drawAll);
+    run();
+  </script>
+ </body>
+</html>

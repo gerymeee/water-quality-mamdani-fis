@@ -4,6 +4,12 @@ A web-based **Mamdani Fuzzy Inference System** for preliminary water-source moni
 
 Developed for **CSci 141 – Intelligent Systems, Laboratory Activity #3: Fuzzy Expert System**.
 
+## Live Application
+
+**[Access WaterSource FIS](https://water-quality-mamdani-fis.vercel.app/)**
+
+The application is deployed on Vercel and can be accessed directly through a web browser without installation.
+
 ## Overview
 
 The application evaluates user-provided water-quality parameters using fuzzy logic and produces a monitoring priority score. It demonstrates the four stages of Mamdani fuzzy inference:
@@ -15,7 +21,9 @@ The application evaluates user-provided water-quality parameters using fuzzy log
 
 ## Running the Application
 
-No installation or additional dependencies are required.
+You can access the [live application](https://water-quality-mamdani-fis.vercel.app/) or run it locally.
+
+No installation or additional dependencies are required for local use.
 
 1. Download or clone this repository.
 2. Open `index.html` in a modern web browser.
@@ -76,7 +84,7 @@ The output universe ranges from 0 to 100, evaluated at intervals of 0.1.
 
 ## Testing
 
-To execute the automated tests, install Node.js and run:
+To execute the automated tests locally, install Node.js and run:
 
 ```bash
 node test_engine.js

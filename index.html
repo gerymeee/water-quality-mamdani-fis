@@ -35,32 +35,64 @@
     }
 
 
-    /* Page layout and typography */
-    header {
-        background: linear-gradient(110deg,#12354c,#176359);
-        color: white;
-        padding: 28px max(5vw,22px);
+    /* Project header: flat, understated, and separate from the dashboard */
+    .site-header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--border);
+        padding: 25px max(3vw, 22px) 27px;
     }
 
-    header .eyebrow {
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        font-weight: 700;
+    .site-header__inner {
+        width: min(1300px, 94vw);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .site-header__mark {
+        width: 58px;
+        height: 58px;
+        flex: 0 0 58px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .site-header__mark img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .site-header__meta {
+        margin: 0 0 5px;
         font-size: 11px;
-        opacity: .8;
+        font-weight: 700;
+        color: var(--teal);
+        letter-spacing: .7px;
     }
 
-    h1 {
-        font-size: 30px;
+    .site-header h1 {
+        font-size: 26px;
         line-height: 1.2;
-        margin: 9px 0 6px;
+        letter-spacing: -.7px;
+        margin: 0 0 5px;
+        color: var(--ink);
     }
 
-    header p {
-        max-width: 850px;
+    .site-header p {
+        max-width: 780px;
         margin: 0;
-        color: #d8ecec;
-        font-size: 14px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    @media (max-width: 680px) {
+        .site-header { padding: 22px 18px; }
+        .site-header__inner { width: 100%; gap: 14px; align-items: flex-start; }
+        .site-header__mark { width: 44px; height: 44px; flex-basis: 44px; font-size: 12px; }
+        .site-header h1 { font-size: 23px; }
     }
 
     main {
@@ -366,17 +398,18 @@
   </style>
  </head>
  <body>
-  <header>
-   <div class="eyebrow">
-    CSci 141 · Laboratory Activity #3
-   </div>
-   <h1>
-    WaterSource FIS
-   </h1>
-   <p>
-    An explainable Mamdani fuzzy inference system for preliminary water-source monitoring and confirmatory sampling priority. Educational prototype; not a potability assessment.
-   </p>
-  </header>
+   <header class="site-header">
+    <div class="site-header__inner">
+     <div class="site-header__mark">
+        <img src="favicon.png" alt="WaterSource FIS Logo">
+    </div>
+     <div>
+      <div class="site-header__meta">CSci 141 / Laboratory Activity #3</div>
+      <h1>WaterSource FIS</h1>
+      <p>An explainable Mamdani fuzzy inference system for preliminary water-source monitoring and confirmatory sampling priority. Educational prototype; not a potability assessment.</p>
+     </div>
+    </div>
+   </header>
   <main>
    <div class="grid">
     <section class="card">
